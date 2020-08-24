@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-
+var conn = require('../routes/conection');
 var app = require('../app');
 var debug = require('debug')('api-meet-things:server');
 var http = require('http');

@@ -1,21 +1,22 @@
 var express = require('express');
 var router = express.Router();
 var client = require('./conection');
-/* GET users
+
+/* GET conferences
  * @query param id 
  */
 router.get('/', function(req, res, next) {
     try {
         // client.connect().catch(r => {console.log(r);});
         console.log('entro?');
-        client.query('SELECT * FROM user_info', function (err, result) {
+        client.query('SELECT * FROM conference_info where state = $1::text',['E'], function (err, result) {
         console.log(result);
         if (err) {
             res.status(400).send(err);       
         } else {
             res.json(result.rows);
-        }     
-          
+        }    
+           
     });
     } catch (error) {
     }
@@ -23,55 +24,76 @@ router.get('/', function(req, res, next) {
     
 });
 
-/* GET users by id
+/* GET conferences by id
  * @param id 
  */
 router.get('/:id', function(req, res, next) {
     // Find and return record by id param
     try {
         // client.connect().catch(r => {console.log(r);});
-        console.log('entro?', req.params.id );
-        client.query('SELECT * FROM user_info ui join user_role ur on ui.role_id = ur.id where ui.uid=$1::text',[req.params.id], function (err, result) {
+        console.log('entro?');
+        client.query('SELECT * FROM conference_info where id=$1::text',[req.params.id], function (err, result) {
         console.log(result);
         if (err) {
             res.status(400).send(err);       
         } else {
             res.json(result.rows);
         }       
-        
+        client.off(); 
     });
     } catch (err) {
         res.status(400).send(err);   
     }   
 });
 
-/* POST users */
+/* POST conferences */
 router.post('/', function(req, res, next) {
      console.log(req);
-    let user = req.body;
+    let conference = req.body;
     try {
-        // client.connect().catch(r => {console.log(r);});
-        console.log('entro?');
         client.query(
-            'insert into user_info (uid, name, email, role_id) values ($1::text,$2::text,$3::text,$4)',
+            "insert into conference_info (id, title, location, state, quota) values (nextval('conference_info_id_seq'),$1::text,$2::text,$3::text,$4)",
             [
-                user.uid,
-                user.name,
-                user.email,
-                user.role_id
+                conference.title,
+                conference.location,
+                conference.state,
+                conference.quota
             ],             
             function (err, result) {
-        console.log(result);
         if (err) {
             res.status(400).send(err);       
         } else {
             res.json(result.rows);
-        }     
-          
+        }   
+            
     });
     } catch (err) {
         res.status(400).send(err);  
     }   
+});
+
+/* POST conferences  attendant*/
+router.post('/attendant', function(req, res, next) {
+    console.log(req);
+   let attendant = req.body;
+   try {
+       client.query(
+           "insert into user_conference (uid, cid) values ($1::text,$2)",
+           [
+                attendant.uid,
+                attendant.cid,
+           ],             
+           function (err, result) {
+       if (err) {
+           res.status(400).send(err);       
+       } else {
+           res.json(result.rows);
+       }   
+           
+   });
+   } catch (err) {
+       res.status(400).send(err);  
+   }   
 });
 
 function handleError(err) {
